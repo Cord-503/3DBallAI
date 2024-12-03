@@ -16,6 +16,10 @@ public class AiMoving : MonoBehaviour
     [SerializeField] private Transform _player;
     [SerializeField] private float _exitDistance;
 
+    [SerializeField] private bool _alwaysChase;
+    [SerializeField] private bool _alwaysPatrol;
+
+
     private AiState _currentAiState;
     private Transform _detectedPlayer;
 
@@ -43,6 +47,18 @@ public class AiMoving : MonoBehaviour
 
     void Update()
     {
+        if (_alwaysChase)
+        {
+            ChaseBehavior();
+            return;
+        }
+
+        else if (_alwaysPatrol)
+        {
+            PatrolBehavior();
+            return;
+        }
+
         if (_currentAiState == AiState.Patrolling)
         {
             PatrolBehavior();
@@ -73,20 +89,26 @@ public class AiMoving : MonoBehaviour
 
     private void ChaseBehavior()
     {
-        if (!_navAgent.isOnNavMesh || !_navAgent.isActiveAndEnabled || _detectedPlayer == null) return;
+        if (!_navAgent.isOnNavMesh || !_navAgent.isActiveAndEnabled) return;
 
-        _navAgent.SetDestination(_detectedPlayer.position);
-
-        _distanceToTarget = Vector3.Distance(_detectedPlayer.position, transform.position);
-
-        // back if player is out of exit distance
-        if (_distanceToTarget >= _exitDistance && _patrolWaypoints.Length > 0)
-        {
-            _currentAiState = AiState.Patrolling;
+        if (_alwaysChase == false && _detectedPlayer == null)
+        {   
+            _navAgent.SetDestination(_detectedPlayer.position);
+            _distanceToTarget = Vector3.Distance(_detectedPlayer.position, transform.position);
+            // back if player is out of exit distance
+            if (_distanceToTarget >= _exitDistance && _patrolWaypoints.Length > 0)
+            {
+                _currentAiState = AiState.Patrolling;
+            }
+            else if (_distanceToTarget >= _exitDistance && _patrolWaypoints.Length == 0)
+            {
+                _currentAiState = AiState.Idle;
+            }
         }
-        else if (_distanceToTarget >= _exitDistance && _patrolWaypoints.Length == 0)
+
+        else
         {
-            _currentAiState = AiState.Idle;
+            _navAgent.SetDestination(_player.position);
         }
     }
 

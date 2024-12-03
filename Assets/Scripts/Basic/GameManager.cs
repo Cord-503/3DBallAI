@@ -101,7 +101,7 @@ public class GameManager : MonoBehaviour
 
         if (winText != null)
         {
-            winText.text = "You reached the Sky!";
+            winText.text = "You Escaped!";
         }
 
         Time.timeScale = 0f;
