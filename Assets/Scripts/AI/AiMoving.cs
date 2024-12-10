@@ -18,6 +18,9 @@ public class AiMoving : MonoBehaviour
 
     [SerializeField] private bool _alwaysChase;
     [SerializeField] private bool _alwaysPatrol;
+    [SerializeField] private bool _alwaysFlee;
+    [SerializeField] private float _fleeTime;
+
 
 
     private AiState _currentAiState;
@@ -56,6 +59,12 @@ public class AiMoving : MonoBehaviour
         else if (_alwaysPatrol)
         {
             PatrolBehavior();
+            return;
+        }
+
+        else if (_alwaysFlee)
+        {
+            FleeBehavior();
             return;
         }
 
@@ -109,6 +118,22 @@ public class AiMoving : MonoBehaviour
         else
         {
             _navAgent.SetDestination(_player.position);
+        }
+    }
+
+    private void FleeBehavior()
+    {
+
+        if (_detectedPlayer != null)
+        {
+            Vector3 enemyPos = transform.position;
+            Vector3 playerPos = _detectedPlayer.position;
+
+            Vector3 directionAwayFromPlayer = (enemyPos - playerPos).normalized;
+
+            Vector3 fleeTarget = enemyPos + directionAwayFromPlayer * _fleeTime;
+
+            _navAgent.SetDestination(fleeTarget);
         }
     }
 

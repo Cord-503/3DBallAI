@@ -56,6 +56,15 @@ public class BallMovement : MonoBehaviour
     [SerializeField, Range(0f, 20f)]
     float sprintDuration = 1.5f;
 
+    [Header("Trap")]
+    [SerializeField, Range(0f, 8f)]
+    float slowedSpeed = 2f;
+    [SerializeField, Range(0f, 10f)]
+    float slowTime = 3f;
+
+    private bool isSlowed = false;
+    private float originalMaxSpeed;
+
     private float lastSprintTime;
     private bool isSprinting;
     private float sprintStartTime;
@@ -93,6 +102,8 @@ public class BallMovement : MonoBehaviour
     {
         body = GetComponent<Rigidbody>();
         OnValidate();
+
+        originalMaxSpeed = maxSpeed;
     }
 
     private void Update()
@@ -143,30 +154,6 @@ public class BallMovement : MonoBehaviour
         ClearState();
     }
 
-    void HandleSprint()
-    {
-        if (Input.GetKey(KeyCode.LeftShift) &&
-            Time.time >= lastSprintTime + sprintCooldown &&
-            playerInput.magnitude > 0)
-        {
-            if (!isSprinting)
-            {
-                isSprinting = true;
-                sprintStartTime = Time.time;
-                maxSpeed = sprintSpeed;
-            }
-        }
-
-        if (isSprinting)
-        {
-            if (Time.time >= sprintStartTime + sprintDuration)
-            {
-                isSprinting = false;
-                lastSprintTime = Time.time;
-                maxSpeed = 7f;
-            }
-        }
-    }
     private void OnCollisionEnter(Collision collision)
     {
         EvaluateCollision(collision);
@@ -484,5 +471,57 @@ public class BallMovement : MonoBehaviour
     public void PreventSnapToGround()
     {
         stepsSinceLastJump = -1;
+    }
+
+    void HandleSprint()
+    {
+        if (Input.GetKey(KeyCode.LeftShift) &&
+            Time.time >= lastSprintTime + sprintCooldown &&
+            playerInput.magnitude > 0)
+        {
+            if (!isSprinting)
+            {
+                isSprinting = true;
+                sprintStartTime = Time.time;
+                maxSpeed = sprintSpeed;
+            }
+        }
+
+        if (isSprinting)
+        {
+            if (Time.time >= sprintStartTime + sprintDuration)
+            {
+                isSprinting = false;
+                lastSprintTime = Time.time;
+                maxSpeed = 7f;
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Trap"))
+        {
+            HandleSlowdown();
+        }
+    }
+    void HandleSlowdown()
+    {
+        if (isSlowed) return;
+
+        StartCoroutine(SlowdownRoutine());
+    }
+
+    IEnumerator SlowdownRoutine()
+    {
+        isSlowed = true;
+        float currentMaxSpeed = maxSpeed;
+
+        maxSpeed = slowedSpeed;
+
+        yield return new WaitForSeconds(slowTime);
+        maxSpeed = originalMaxSpeed;
+
+        isSlowed = false;
     }
 }
